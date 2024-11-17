@@ -5,3 +5,4 @@ pandas
 plotly
 openpyxl
 jinja2
+gunicorn

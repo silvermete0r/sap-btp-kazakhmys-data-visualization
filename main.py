@@ -1,16 +1,22 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
+from fastapi import HTTPException
+import logging
 import numpy as np
+import os
 
 # RUN: uvicorn main:app --reload
 
-app = FastAPI(title="Kazakhmys Инциденты ВОЛС - Аналитическая Панель")
+app = FastAPI(
+    title="Kazakhmys Инциденты ВОЛС - Аналитическая Панель",
+    docs_url=None if os.getenv('ENVIRONMENT') == 'production' else '/docs'
+)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -32,6 +38,22 @@ def load_data():
     )
     
     return df
+
+# Error Handling
+logging.basicConfig(
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request, exc):
+    logger.error(f"Error processing request: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal server error"}
+    )
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
