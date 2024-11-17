@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Kazakhmys ВОЛС - Аналитическая Панель</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">
+            Аналитическая панель инцидентов ВОЛС Kazakhmys
+        </h1>
+
+        <!-- Сводная статистика -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Всего инцидентов</h3>
+                <p class="text-3xl font-bold text-blue-600" id="totalIncidentsValue">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Процент решённых</h3>
+                <p class="text-3xl font-bold text-green-600" id="resolvedPercentage">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Частая локация</h3>
+                <p class="text-xl font-bold text-purple-600" id="commonLocation">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Частый тип</h3>
+                <p class="text-xl font-bold text-orange-600" id="commonType">-</p>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="grid grid-cols-1 gap-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="incidentsByMonth"></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="incidentTypeAndReason"></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="incidentsByLocation"></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="incidentsByProductionObject"></div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="incidentTypeAndStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            // Загрузка сводной статистики
+            const statsResponse = await fetch('/api/summary_stats');
+            const stats = await statsResponse.json();
+            
+            document.getElementById('totalIncidentsValue').textContent = stats.total_incidents;
+            document.getElementById('resolvedPercentage').textContent = 
+                `${stats.resolved_percentage.toFixed(1)}%`;
+            document.getElementById('commonLocation').textContent = stats.most_common_location;
+            document.getElementById('commonType').textContent = stats.most_common_type;
+
+            // Загрузка графиков
+            const monthlyResponse = await fetch('/api/incidents_by_month');
+            const monthlyData = await monthlyResponse.json();
+            Plotly.newPlot('incidentsByMonth', JSON.parse(monthlyData));
+
+            const typeReasonResponse = await fetch('/api/incident_type_and_reason');
+            const typeReasonData = await typeReasonResponse.json();
+            Plotly.newPlot('incidentTypeAndReason', JSON.parse(typeReasonData));
+
+            const locationResponse = await fetch('/api/incidents_by_location');
+            const locationData = await locationResponse.json();
+            Plotly.newPlot('incidentsByLocation', JSON.parse(locationData));
+
+            const productionResponse = await fetch('/api/incidents_by_production_object');
+            const productionData = await productionResponse.json();
+            Plotly.newPlot('incidentsByProductionObject', JSON.parse(productionData));
+
+            const typeStatusResponse = await fetch('/api/incident_distribution_by_type_and_status');
+            const typeStatusData = await typeStatusResponse.json();
+            Plotly.newPlot('incidentTypeAndStatus', JSON.parse(typeStatusData));
+        }
+
+        window.onload = loadDashboard;
+    </script>
+</body>
+</html>
