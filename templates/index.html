@@ -2,91 +2,118 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kazakhmys ВОЛС - Аналитическая Панель</title>
+    <link rel="icon" href="https://www.tmforum.org/oda/directory/_next/image?url=https%3A%2F%2Forderly-memory-f4bd417d31.media.strapiapp.com%2Fsap_business_technology_platform_sap_btp_4f4fc20d20.false&w=640&q=75" type="image/x-icon">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">
-            Аналитическая панель инцидентов ВОЛС Kazakhmys
-        </h1>
+    <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <nav class="bg-white shadow-lg rounded-lg p-4 mb-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl sm:text-3xl font-bold text-gray-800">
+                    Аналитическая панель ВОЛС
+                </h1>
+                <a href="/upload" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm sm:text-base">
+                    Загрузить файл
+                </a>
+            </div>
+        </nav>
 
         <!-- Сводная статистика -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Всего инцидентов</h3>
-                <p class="text-3xl font-bold text-blue-600" id="totalIncidentsValue">-</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <h3 class="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">Всего инцидентов</h3>
+                <p class="text-xl sm:text-3xl font-bold text-blue-600" id="totalIncidentsValue">-</p>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Процент решённых</h3>
-                <p class="text-3xl font-bold text-green-600" id="resolvedPercentage">-</p>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <h3 class="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">Процент решённых</h3>
+                <p class="text-xl sm:text-3xl font-bold text-green-600" id="resolvedPercentage">-</p>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Частая локация</h3>
-                <p class="text-xl font-bold text-purple-600" id="commonLocation">-</p>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <h3 class="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">Частая локация</h3>
+                <p class="text-base sm:text-xl font-bold text-purple-600" id="commonLocation">-</p>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Частый тип</h3>
-                <p class="text-xl font-bold text-orange-600" id="commonType">-</p>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <h3 class="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">Частый тип</h3>
+                <p class="text-base sm:text-xl font-bold text-orange-600" id="commonType">-</p>
             </div>
         </div>
 
         <!-- Графики -->
-        <div class="grid grid-cols-1 gap-8">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div id="incidentsByMonth"></div>
+        <div class="grid grid-cols-1 gap-4 sm:gap-8">
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div id="incidentsByMonth" class="h-[300px] sm:h-[400px]"></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div id="incidentTypeAndReason"></div>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div id="incidentTypeAndReason" class="h-[300px] sm:h-[400px]"></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div id="incidentsByLocation"></div>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div id="incidentsByLocation" class="h-[300px] sm:h-[400px]"></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div id="incidentsByProductionObject"></div>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div id="incidentsByProductionObject" class="h-[300px] sm:h-[400px]"></div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div id="incidentTypeAndStatus"></div>
+            <div class="bg-white p-3 sm:p-6 rounded-lg shadow">
+                <div id="incidentTypeAndStatus" class="h-[300px] sm:h-[400px]"></div>
             </div>
         </div>
     </div>
 
     <script>
+        const config = {
+            responsive: true,
+            displayModeBar: false,
+            scrollZoom: false
+        };
+
         async function loadDashboard() {
-            // Загрузка сводной статистики
-            const statsResponse = await fetch('/api/summary_stats');
-            const stats = await statsResponse.json();
-            
-            document.getElementById('totalIncidentsValue').textContent = stats.total_incidents;
-            document.getElementById('resolvedPercentage').textContent = 
-                `${stats.resolved_percentage.toFixed(1)}%`;
-            document.getElementById('commonLocation').textContent = stats.most_common_location;
-            document.getElementById('commonType').textContent = stats.most_common_type;
+            try {
+                const statsResponse = await fetch('/api/summary_stats');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('totalIncidentsValue').textContent = stats.total_incidents;
+                document.getElementById('resolvedPercentage').textContent = 
+                    `${stats.resolved_percentage.toFixed(1)}%`;
+                document.getElementById('commonLocation').textContent = stats.most_common_location;
+                document.getElementById('commonType').textContent = stats.most_common_type;
 
-            // Загрузка графиков
-            const monthlyResponse = await fetch('/api/incidents_by_month');
-            const monthlyData = await monthlyResponse.json();
-            Plotly.newPlot('incidentsByMonth', JSON.parse(monthlyData));
+                const responses = await Promise.all([
+                    fetch('/api/incidents_by_month'),
+                    fetch('/api/incident_type_and_reason'),
+                    fetch('/api/incidents_by_location'),
+                    fetch('/api/incidents_by_production_object'),
+                    fetch('/api/incident_distribution_by_type_and_status')
+                ]);
 
-            const typeReasonResponse = await fetch('/api/incident_type_and_reason');
-            const typeReasonData = await typeReasonResponse.json();
-            Plotly.newPlot('incidentTypeAndReason', JSON.parse(typeReasonData));
+                const [monthly, typeReason, location, production, typeStatus] = 
+                    await Promise.all(responses.map(r => r.json()));
 
-            const locationResponse = await fetch('/api/incidents_by_location');
-            const locationData = await locationResponse.json();
-            Plotly.newPlot('incidentsByLocation', JSON.parse(locationData));
+                const plots = [
+                    { id: 'incidentsByMonth', data: monthly },
+                    { id: 'incidentTypeAndReason', data: typeReason },
+                    { id: 'incidentsByLocation', data: location },
+                    { id: 'incidentsByProductionObject', data: production },
+                    { id: 'incidentTypeAndStatus', data: typeStatus }
+                ];
 
-            const productionResponse = await fetch('/api/incidents_by_production_object');
-            const productionData = await productionResponse.json();
-            Plotly.newPlot('incidentsByProductionObject', JSON.parse(productionData));
-
-            const typeStatusResponse = await fetch('/api/incident_distribution_by_type_and_status');
-            const typeStatusData = await typeStatusResponse.json();
-            Plotly.newPlot('incidentTypeAndStatus', JSON.parse(typeStatusData));
+                plots.forEach(plot => {
+                    const data = JSON.parse(plot.data);
+                    data.layout.autosize = true;
+                    data.layout.margin = { l: 50, r: 20, t: 50, b: 100 };
+                    Plotly.newPlot(plot.id, data.data, data.layout, config);
+                });
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
         }
 
         window.onload = loadDashboard;
+        window.addEventListener('resize', () => {
+            const plots = document.querySelectorAll('[id^="incidents"]');
+            plots.forEach(plot => Plotly.Plots.resize(plot));
+        });
     </script>
 </body>
 </html>
